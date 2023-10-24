@@ -1,7 +1,11 @@
 table:
   name: users
   schema: public
-object_relationships:
-  - name: primary_address
+array_relationships:
+  - name: posts
     using:
-      foreign_key_constraint_on: primary_address_id
+      foreign_key_constraint_on:
+        column: creator_id
+        table:
+          name: posts
+          schema: public

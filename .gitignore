@@ -1,6 +1,9 @@
 app_db_prod
 hasura_metadata_db_prod
+hasura_prod
 app_db_dev_1
 hasura_metadata_db_dev_1
+hasura_dev_1
 app_db_dev_2
 hasura_metadata_db_dev_2
+hasura_dev_2

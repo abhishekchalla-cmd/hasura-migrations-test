@@ -1,0 +1,130 @@
+version: "3"
+
+networks:
+  app_network:
+
+
+services:
+  # Prod
+
+  app.db.prod:
+    image: postgres:15
+    container_name: hmt.app.db.prod
+    networks:
+      - app_network
+    ports:
+      - "5432"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_DB: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "postgres",
+          "-d",
+          "postgres"
+        ]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+    volumes:
+      - ./app_db_prod:/var/lib/postgresql/data
+
+  hasura.metadata.db.prod:
+    image: postgres:15
+    container_name: hmt.hasura.metadata.db.prod
+    networks:
+      - app_network
+    ports:
+      - "5432"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_DB: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "postgres",
+          "-d",
+          "postgres"
+        ]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+    volumes:
+      - ./hasura_metadata_db_prod:/var/lib/postgresql/data
+
+  hasura.prod:
+    image: hasura/graphql-engine:v2.17.1
+    container_name: hmt.hasura.prod
+    networks:
+      - app_network
+    ports:
+      - "8080:8080"
+    depends_on:
+      app.db.prod:
+        condition: service_healthy
+      hasura.metadata.db.prod:
+        condition: service_healthy
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgres@app.db.prod:5432/postgres
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgres@hasura.metadata.db.prod:5432/postgres
+      # We use the console from hasura cli to manage migrations and metdata
+      HASURA_GRAPHQL_ENABLE_CONSOLE: true
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      HASURA_GRAPHQL_ADMIN_SECRET: secret
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "public"
+      HASURA_GRAPHQL_MIGRATIONS_DIR: /hasura/migrations
+      HASURA_GRAPHQL_METADATA_DIR: /hasura/metadata
+      HASURA_GRAPHQL_JWT_SECRET: ' { "type":"RS512", "key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAq2GTzgRmumW99un+Q16H\nmAmMeGPTldZzWDRz0rIeA5lFPPh/KmY+kVYob336OA/28u5zdl8F6fnX+XugXR8t\nboxQignveHfI4uQkKZme3fRLz4Dxpddczu33wZCc8BQA7mSnWJTkBRZ/ZV3HAYnf\ncpWtvrEGYvherYPyBY5sjvlBM85FoSA9+UzaMNfxTmgwag2jXVpukxGHaIzArx4B\nVWdOGkijquEmjo42yax7JfCsd8d2ANTbU9Rt6SlBJUs9GalkgGrVPc1y6pdpf6Mr\nmDZLUwuvsp39zKamizuHSI+650xuzSMyjtlaAyQpruvTLvaAi51wpEW3n5fhgWKD\nHwIDAQAB\n-----END PUBLIC KEY-----\n"}'
+    volumes:
+      - ./hasura_migrations:/hasura
+
+  # Dev 1
+
+  app.db.dev.1:
+    image: postgres:15
+    networks:
+      - app_network
+    volumes:
+      - ./app_db_dev_1:/var/lib/postgresql/data
+
+  hasura.metadata.db.dev.1:
+    image: postgres:15
+    networks:
+      - app_network
+    volumes:
+      - ./hasura_metadata_db_dev_1:/var/lib/postgresql/data
+
+  hasura.dev.1:
+    image: hasura-cli
+    networks:
+      - app_network
+
+  # Dev 2
+
+  app.db.dev.2:
+    image: postgres:15
+    networks:
+      - app_network
+    volumes:
+      - ./app_db_dev_2:/var/lib/postgresql/data
+
+  hasura.metadata.db.dev.2:
+    image: postgres:15
+    networks:
+      - app_network
+    volumes:
+      - ./hasura_metadata_db_dev_2:/var/lib/postgresql/data
+
+  hasura.dev.2:
+    image: hasura-cli
+    networks:
+      - app_network

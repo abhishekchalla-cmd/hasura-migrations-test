@@ -1,0 +1,18 @@
+table:
+  name: addresses
+  schema: public
+object_relationships:
+  - name: country
+    using:
+      foreign_key_constraint_on: country_id
+  - name: state
+    using:
+      foreign_key_constraint_on: state_id
+array_relationships:
+  - name: users
+    using:
+      foreign_key_constraint_on:
+        column: primary_address_id
+        table:
+          name: users
+          schema: public
